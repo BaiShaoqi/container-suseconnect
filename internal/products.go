@@ -49,21 +49,21 @@ type Product struct {
 
 // Parse the product as expected from the given reader. This function already
 // checks whether the given reader is valid or not.
-func parseProducts(reader io.Reader) ([]Product, error) {
-	var products []Product
+func parseProducts(reader io.Reader) (Product, error) {
+	var product Product
 
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return products,
+		return product,
 			loggedError("Can't read product information: %v", err.Error())
 	}
 
-	err = json.Unmarshal(data, &products)
+	err = json.Unmarshal(data, &product)
 	if err != nil {
-		return products,
+		return product,
 			loggedError("Can't read product information: %v - %s", err.Error(), data)
 	}
-	return products, nil
+	return product, nil
 }
 
 // Request product information to the registration server. The `regCode`
@@ -72,8 +72,8 @@ func parseProducts(reader io.Reader) ([]Product, error) {
 // be requested.
 // This function relies on [/connect/subscriptions/products](https://github.com/SUSE/connect/wiki/SCC-API-%28Implemented%29#product) API.
 func requestProductsFromRegCode(data SUSEConnectData, regCode string,
-	installed InstalledProduct) ([]Product, error) {
-	var products []Product
+	installed InstalledProduct, credentials Credentials) (Product, error) {
+	var products Product
 	var err error
 
 	tr := &http.Transport{
@@ -82,6 +82,7 @@ func requestProductsFromRegCode(data SUSEConnectData, regCode string,
 	}
 	client := &http.Client{Transport: tr}
 	req, err := http.NewRequest("GET", data.SccURL, nil)
+	req.SetBasicAuth(credentials.Username, credentials.Password)
 	if err != nil {
 		return products,
 			loggedError("Could not connect with registration server: %v\n", err)
@@ -92,7 +93,7 @@ func requestProductsFromRegCode(data SUSEConnectData, regCode string,
 	values.Add("version", installed.Version)
 	values.Add("arch", installed.Arch)
 	req.URL.RawQuery = values.Encode()
-	req.URL.Path = "/connect/subscriptions/products"
+	req.URL.Path = "/connect/systems/products"
 	if len(regCode) > 0 {
 		// SMT server does not need regcode
 		req.Header.Add("Authorization", `Token token=`+regCode)
@@ -133,12 +134,12 @@ func RequestProducts(data SUSEConnectData, credentials Credentials,
 	}
 
 	for _, regCode := range regCodes {
-		p, err := requestProductsFromRegCode(data, regCode, installed)
+		p, err := requestProductsFromRegCode(data, regCode, installed, credentials)
 		if err != nil {
 			var emptyProducts []Product
 			return emptyProducts, err
 		}
-		products = append(products, p...)
+		products = append(products, p)
 	}
 
 	return products, nil
