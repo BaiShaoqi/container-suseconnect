@@ -85,10 +85,7 @@ func TestValidProduct(t *testing.T) {
 	if err != nil {
 		t.Fatal("Unexpected error when reading a valid JSON file")
 	}
-	if len(products) != 1 {
-		t.Fatalf("Unexpected number of products found. Got %d, expected %d", len(products), 1)
-	}
-	productHelper(t, products[0])
+	productHelper(t, products)
 }
 
 // Tests for the requestProduct function.
@@ -155,7 +152,7 @@ func TestValidRequestForProduct(t *testing.T) {
 
 	var cr Credentials
 	var ip InstalledProduct
-	data := SUSEConnectData{SccURL: ts.URL, Insecure: true}
+	data := SUSEConnectData{SccURL: ts.URL, Insecure: false}
 
 	products, err := RequestProducts(data, cr, ip)
 	if err != nil {

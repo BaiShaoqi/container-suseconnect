@@ -28,13 +28,15 @@ func testServiceOutput(
 	expectedOutput string,
 	dumpFunction func(*bytes.Buffer, []Product),
 ) {
+	var products []Product
 	reader, err := os.Open(filePath)
 	if err != nil {
 		t.Fatal("Could not read JSON file...")
 	}
 	defer reader.Close()
 
-	products, err := parseProducts(reader)
+	product, err := parseProducts(reader)
+	products = append(products, product)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

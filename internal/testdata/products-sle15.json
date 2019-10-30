@@ -1,4 +1,3 @@
-[
   {
     "release_stage": "released",
     "eula_url": "http://smt-ec2.susecloud.net/repo/SUSE/Products/SLE-Product-SLES/15/x86_64/product.license/",
@@ -1075,4 +1074,3 @@
     "free": true,
     "former_identifier": "SLES"
   }
-]
